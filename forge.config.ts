@@ -3,6 +3,7 @@ import { MakerSquirrel } from '@electron-forge/maker-squirrel';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
+import { PublisherGitHub } from '@electron-forge/publisher-github';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -14,6 +15,16 @@ const config: ForgeConfig = {
   makers: [
     new MakerSquirrel({
       name: 'GitHubNotify',
+    }),
+  ],
+  publishers: [
+    new PublisherGitHub({
+      repository: {
+        owner: 'derhally',
+        name: 'github-notify',
+      },
+      prerelease: false,
+      draft: true,
     }),
   ],
   plugins: [

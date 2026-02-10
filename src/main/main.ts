@@ -1,12 +1,13 @@
 import { app, BrowserWindow, powerMonitor, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
-import { createTray, setTrayState, getIsPaused } from './tray';
+import { createTray, setTrayState, setTrayTooltip, getIsPaused, setSnoozeEndTime } from './tray';
 import { registerIpcHandlers } from './ipc-handlers';
 import { startPolling, stopPolling, restartPolling, pollNow } from './poller';
-import { hasToken, getSettings } from './store';
+import { hasToken, getSettings, getSnoozeUntil, setSnoozeUntil, clearSnooze } from './store';
 import { setAutoLaunch } from './auto-launch';
 import { log, flushLogs, getLogFilePath } from './logger';
+import { isNotificationSuppressed } from './quiet-hours';
 import { TrayState } from '../shared/types';
 
 if (started) {
@@ -21,6 +22,55 @@ if (!gotLock) {
 }
 
 let settingsWindow: BrowserWindow | null = null;
+let snoozeTimer: ReturnType<typeof setTimeout> | null = null;
+
+function clearSnoozeTimer(): void {
+  if (snoozeTimer) {
+    clearTimeout(snoozeTimer);
+    snoozeTimer = null;
+  }
+}
+
+function updateTrayForSuppression(): void {
+  if (!hasToken()) return;
+  if (isNotificationSuppressed()) {
+    setTrayState(TrayState.Quiet);
+  } else {
+    setTrayState(TrayState.Normal);
+  }
+}
+
+function scheduleSnoozeExpiry(until: number): void {
+  clearSnoozeTimer();
+  const remaining = until - Date.now();
+  if (remaining <= 0) return;
+
+  snoozeTimer = setTimeout(() => {
+    snoozeTimer = null;
+    clearSnooze();
+    setSnoozeEndTime(0);
+    updateTrayForSuppression();
+    log('Snooze expired');
+  }, remaining);
+}
+
+function activateSnooze(durationMinutes: number): void {
+  const until = Date.now() + durationMinutes * 60_000;
+  setSnoozeUntil(until);
+  setSnoozeEndTime(until);
+  setTrayState(TrayState.Quiet);
+  setTrayTooltip(`GitHub Notify - Snoozed until ${new Date(until).toLocaleTimeString()}`);
+  scheduleSnoozeExpiry(until);
+  log(`Snoozed for ${durationMinutes} minutes (until ${new Date(until).toLocaleTimeString()})`);
+}
+
+function cancelSnooze(): void {
+  clearSnoozeTimer();
+  clearSnooze();
+  setSnoozeEndTime(0);
+  updateTrayForSuppression();
+  log('Snooze cancelled');
+}
 
 function openSettings(): void {
   if (settingsWindow) {
@@ -30,7 +80,7 @@ function openSettings(): void {
 
   settingsWindow = new BrowserWindow({
     width: 520,
-    height: 660,
+    height: 740,
     resizable: false,
     maximizable: false,
     show: false,
@@ -64,6 +114,7 @@ function onSettingsChanged(): void {
   const settings = getSettings();
   setAutoLaunch(settings.autoStart);
   restartPolling();
+  updateTrayForSuppression();
   log('Settings changed, polling restarted');
 }
 
@@ -100,6 +151,12 @@ app.whenReady().then(() => {
         log('Polling resumed');
       }
     },
+    onSnooze: (durationMinutes: number) => {
+      activateSnooze(durationMinutes);
+    },
+    onCancelSnooze: () => {
+      cancelSnooze();
+    },
     onOpenLogs: () => {
       shell.openPath(getLogFilePath());
     },
@@ -112,6 +169,21 @@ app.whenReady().then(() => {
   if (hasToken()) {
     setTrayState(TrayState.Normal);
     startPolling();
+
+    // Recover persisted snooze state
+    const persistedSnooze = getSnoozeUntil();
+    if (persistedSnooze > Date.now()) {
+      setSnoozeEndTime(persistedSnooze);
+      setTrayState(TrayState.Quiet);
+      setTrayTooltip(`GitHub Notify - Snoozed until ${new Date(persistedSnooze).toLocaleTimeString()}`);
+      scheduleSnoozeExpiry(persistedSnooze);
+      log(`Restored snooze until ${new Date(persistedSnooze).toLocaleTimeString()}`);
+    } else if (persistedSnooze > 0) {
+      clearSnooze();
+    }
+
+    // Apply quiet hours tray state if active
+    updateTrayForSuppression();
   } else {
     setTrayState(TrayState.Unconfigured);
     openSettings();

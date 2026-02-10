@@ -9,6 +9,7 @@ import { getSettings, getToken, getSeenPRs, saveSeenPRs, pruneSeenPRs } from './
 import { notifyNewPRs } from './notifications';
 import { setTrayState, setTrayTooltip, getIsPaused } from './tray';
 import { log } from './logger';
+import { isNotificationSuppressed } from './quiet-hours';
 import { TrayState, GitHubPR, SeenEntry, getPRKey, isOctokitError } from '../shared/types';
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
@@ -90,8 +91,10 @@ export async function pollNow(): Promise<void> {
 
     log(`Found ${filteredPRs.length} total PRs, ${newPRs.length} new`);
 
-    if (newPRs.length > 0) {
+    if (newPRs.length > 0 && !isNotificationSuppressed()) {
       notifyNewPRs(newPRs, settings.notificationMode, settings.notificationSound, settings.customSoundPath);
+    } else if (newPRs.length > 0) {
+      log(`${newPRs.length} new PRs suppressed (quiet hours/snooze active)`);
     }
 
     const updatedSeen = updateSeenSet(filteredPRs, seenEntries);
@@ -102,9 +105,11 @@ export async function pollNow(): Promise<void> {
       pruneSeenPRs();
     }
 
-    setTrayState(TrayState.Normal);
+    const suppressed = isNotificationSuppressed();
+    setTrayState(suppressed ? TrayState.Quiet : TrayState.Normal);
     const now = new Date().toLocaleTimeString();
-    setTrayTooltip(`GitHub Notify - ${filteredPRs.length} PRs tracked\nLast check: ${now}`);
+    const statusPrefix = suppressed ? 'Quiet - ' : '';
+    setTrayTooltip(`GitHub Notify - ${statusPrefix}${filteredPRs.length} PRs tracked\nLast check: ${now}`);
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     log(`Poll error: ${message}`);

@@ -5,6 +5,13 @@ import { testConnection } from './github-api';
 import { AppSettings, NotificationMode, NotificationSound } from '../shared/types';
 
 const VALID_SOUND_VALUES: string[] = Object.values(NotificationSound);
+const TIME_PATTERN = /^\d{2}:\d{2}$/;
+
+function isValidTime(time: string): boolean {
+  if (!TIME_PATTERN.test(time)) return false;
+  const [hours, minutes] = time.split(':').map(Number);
+  return hours >= 0 && hours <= 23 && minutes >= 0 && minutes <= 59;
+}
 
 function isValidCustomSoundPath(soundMode: string, filePath: string): boolean {
   if (soundMode !== NotificationSound.Custom) return true;
@@ -30,7 +37,12 @@ function isValidSettings(value: unknown): value is AppSettings {
     typeof obj.autoStart === 'boolean' &&
     Array.isArray(obj.filters) &&
     obj.filters.length <= 100 &&
-    obj.filters.every((f: unknown) => typeof f === 'string' && f.length <= 200)
+    obj.filters.every((f: unknown) => typeof f === 'string' && f.length <= 200) &&
+    typeof obj.quietHoursEnabled === 'boolean' &&
+    typeof obj.quietHoursStart === 'string' &&
+    isValidTime(obj.quietHoursStart) &&
+    typeof obj.quietHoursEnd === 'string' &&
+    isValidTime(obj.quietHoursEnd)
   );
 }
 

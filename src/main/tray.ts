@@ -5,12 +5,15 @@ import { TrayState } from '../shared/types';
 let tray: Tray | null = null;
 let currentState: TrayState = TrayState.Unconfigured;
 let isPaused = false;
+let snoozeEndTime = 0;
 let iconCache: Map<TrayState, NativeImage> | null = null;
 
 interface TrayCallbacks {
   onCheckNow: () => void;
   onOpenSettings: () => void;
   onTogglePause: () => void;
+  onSnooze: (durationMinutes: number) => void;
+  onCancelSnooze: () => void;
   onOpenLogs: () => void;
   onQuit: () => void;
 }
@@ -21,6 +24,7 @@ const ICON_FILENAMES: Record<TrayState, string> = {
   [TrayState.Normal]: 'tray-icon.png',
   [TrayState.Error]: 'tray-icon-error.png',
   [TrayState.Unconfigured]: 'tray-icon-unconfigured.png',
+  [TrayState.Quiet]: 'tray-icon-quiet.png',
 };
 
 function loadIcons(): Map<TrayState, NativeImage> {
@@ -40,6 +44,42 @@ function getIcon(state: TrayState): NativeImage {
   return iconCache.get(state) || nativeImage.createEmpty();
 }
 
+function formatSnoozeRemaining(): string {
+  const remaining = snoozeEndTime - Date.now();
+  if (remaining <= 0) return '';
+  const minutes = Math.ceil(remaining / 60_000);
+  if (minutes >= 60) {
+    const h = Math.floor(minutes / 60);
+    const m = minutes % 60;
+    return m > 0 ? `${h}h ${m}m` : `${h}h`;
+  }
+  return `${minutes}m`;
+}
+
+function buildSnoozeMenuItems(): MenuItemConstructorOptions {
+  const isActive = snoozeEndTime > Date.now();
+
+  if (isActive) {
+    return {
+      label: `Cancel Snooze (${formatSnoozeRemaining()} left)`,
+      click: () => {
+        callbacks.onCancelSnooze();
+        updateContextMenu();
+      },
+    };
+  }
+
+  return {
+    label: 'Snooze',
+    submenu: [
+      { label: '30 minutes', click: () => callbacks.onSnooze(30) },
+      { label: '1 hour', click: () => callbacks.onSnooze(60) },
+      { label: '2 hours', click: () => callbacks.onSnooze(120) },
+      { label: '4 hours', click: () => callbacks.onSnooze(240) },
+    ],
+  };
+}
+
 function buildContextMenu(): Menu {
   const template: MenuItemConstructorOptions[] = [
     {
@@ -54,6 +94,10 @@ function buildContextMenu(): Menu {
         callbacks.onTogglePause();
         updateContextMenu();
       },
+      enabled: currentState !== TrayState.Unconfigured,
+    },
+    {
+      ...buildSnoozeMenuItems(),
       enabled: currentState !== TrayState.Unconfigured,
     },
     { type: 'separator' },
@@ -109,5 +153,14 @@ export function setTrayTooltip(tooltip: string): void {
 
 export function getIsPaused(): boolean {
   return isPaused;
+}
+
+export function setSnoozeEndTime(endTime: number): void {
+  snoozeEndTime = endTime;
+  updateContextMenu();
+}
+
+export function refreshContextMenu(): void {
+  updateContextMenu();
 }
 

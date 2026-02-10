@@ -8,6 +8,7 @@ export enum TrayState {
   Normal = 'normal',
   Error = 'error',
   Unconfigured = 'unconfigured',
+  Quiet = 'quiet',
 }
 
 export enum NotificationSound {
@@ -23,6 +24,9 @@ export interface AppSettings {
   customSoundPath: string;
   autoStart: boolean;
   filters: string[];
+  quietHoursEnabled: boolean;
+  quietHoursStart: string;
+  quietHoursEnd: string;
 }
 
 export interface GitHubPR {

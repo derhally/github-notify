@@ -6,6 +6,7 @@ interface StoreSchema {
   encryptedToken: string;
   settings: AppSettings;
   seenPRs: SeenEntry[];
+  snoozeUntil: number;
 }
 
 const store = new Store<StoreSchema>({
@@ -18,8 +19,12 @@ const store = new Store<StoreSchema>({
       customSoundPath: '',
       autoStart: true,
       filters: [],
+      quietHoursEnabled: false,
+      quietHoursStart: '22:00',
+      quietHoursEnd: '08:00',
     },
     seenPRs: [],
+    snoozeUntil: 0,
   },
 });
 
@@ -68,4 +73,16 @@ export function pruneSeenPRs(maxAgeDays: number = 30): void {
   const current = getSeenPRs();
   const pruned = current.filter((entry) => entry.seenAt > cutoff);
   saveSeenPRs(pruned);
+}
+
+export function getSnoozeUntil(): number {
+  return store.get('snoozeUntil');
+}
+
+export function setSnoozeUntil(until: number): void {
+  store.set('snoozeUntil', until);
+}
+
+export function clearSnooze(): void {
+  store.set('snoozeUntil', 0);
 }

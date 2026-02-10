@@ -53,6 +53,26 @@ app.innerHTML = `
 
   <div class="form-group">
     <div class="toggle-row">
+      <label>Quiet Hours</label>
+      <label class="toggle">
+        <input type="checkbox" id="quiet-hours-enabled" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-group" id="quiet-hours-times" style="display: none;">
+    <label>Schedule</label>
+    <div class="time-row">
+      <input type="time" id="quiet-hours-start" />
+      <span>to</span>
+      <input type="time" id="quiet-hours-end" />
+    </div>
+    <div class="hint">Notifications are suppressed during this window. Polling continues normally.</div>
+  </div>
+
+  <div class="form-group">
+    <div class="toggle-row">
       <label>Start with Windows</label>
       <label class="toggle">
         <input type="checkbox" id="auto-start" />
@@ -82,6 +102,10 @@ const notificationSoundSelect = document.getElementById('notification-sound') as
 const customSoundGroup = document.getElementById('custom-sound-group') as HTMLDivElement;
 const customSoundPathInput = document.getElementById('custom-sound-path') as HTMLInputElement;
 const browseSoundBtn = document.getElementById('browse-sound') as HTMLButtonElement;
+const quietHoursEnabledCheckbox = document.getElementById('quiet-hours-enabled') as HTMLInputElement;
+const quietHoursTimesGroup = document.getElementById('quiet-hours-times') as HTMLDivElement;
+const quietHoursStartInput = document.getElementById('quiet-hours-start') as HTMLInputElement;
+const quietHoursEndInput = document.getElementById('quiet-hours-end') as HTMLInputElement;
 const autoStartCheckbox = document.getElementById('auto-start') as HTMLInputElement;
 const filtersTextarea = document.getElementById('filters') as HTMLTextAreaElement;
 const saveBtn = document.getElementById('save') as HTMLButtonElement;
@@ -98,6 +122,10 @@ toggleVisibilityBtn.addEventListener('click', () => {
 
 notificationSoundSelect.addEventListener('change', () => {
   customSoundGroup.style.display = notificationSoundSelect.value === NotificationSound.Custom ? '' : 'none';
+});
+
+quietHoursEnabledCheckbox.addEventListener('change', () => {
+  quietHoursTimesGroup.style.display = quietHoursEnabledCheckbox.checked ? '' : 'none';
 });
 
 browseSoundBtn.addEventListener('click', async () => {
@@ -156,6 +184,9 @@ saveBtn.addEventListener('click', async () => {
       customSoundPath: customSoundPathInput.value,
       autoStart: autoStartCheckbox.checked,
       filters,
+      quietHoursEnabled: quietHoursEnabledCheckbox.checked,
+      quietHoursStart: quietHoursStartInput.value || '22:00',
+      quietHoursEnd: quietHoursEndInput.value || '08:00',
     });
 
     saveBtn.textContent = 'Saved!';
@@ -179,6 +210,10 @@ async function loadSettings(): Promise<void> {
   notificationSoundSelect.value = settings.notificationSound;
   customSoundPathInput.value = settings.customSoundPath;
   customSoundGroup.style.display = settings.notificationSound === NotificationSound.Custom ? '' : 'none';
+  quietHoursEnabledCheckbox.checked = settings.quietHoursEnabled;
+  quietHoursStartInput.value = settings.quietHoursStart;
+  quietHoursEndInput.value = settings.quietHoursEnd;
+  quietHoursTimesGroup.style.display = settings.quietHoursEnabled ? '' : 'none';
   autoStartCheckbox.checked = settings.autoStart;
   filtersTextarea.value = settings.filters.join('\n');
 

@@ -208,3 +208,18 @@ button:disabled {
   font-size: 13px;
   color: #57606a;
 }
+
+.time-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.time-row input[type="time"] {
+  width: 120px;
+}
+
+.time-row span {
+  font-size: 13px;
+  color: #57606a;
+}

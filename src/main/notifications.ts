@@ -54,6 +54,7 @@ function buildTTSText(pr: GitHubPR): string {
   return `New pull request in ${sanitizeForTTS(pr.repoFullName)}: ${sanitizeForTTS(title)}, by ${sanitizeForTTS(pr.author)}`;
 }
 
+
 async function speakPRs(prs: GitHubPR[], remaining: number): Promise<void> {
   for (const pr of prs) {
     const text = buildTTSText(pr);

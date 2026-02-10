@@ -25,7 +25,6 @@ const config: ForgeConfig = {
         name: 'github-notify',
       },
       prerelease: false,
-      draft: true,
     }),
   ],
   plugins: [

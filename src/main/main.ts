@@ -6,7 +6,7 @@ import { registerIpcHandlers } from './ipc-handlers';
 import { startPolling, stopPolling, restartPolling, pollNow } from './poller';
 import { hasToken, getSettings } from './store';
 import { setAutoLaunch } from './auto-launch';
-import { log, getLogFilePath } from './logger';
+import { log, flushLogs, getLogFilePath } from './logger';
 import { TrayState } from '../shared/types';
 
 if (started) {
@@ -88,12 +88,11 @@ app.whenReady().then(() => {
   createTray({
     onCheckNow: () => {
       log('Manual poll triggered');
-      pollNow();
+      void pollNow();
     },
     onOpenSettings: openSettings,
     onTogglePause: () => {
-      const paused = getIsPaused();
-      if (paused) {
+      if (getIsPaused()) {
         stopPolling();
         log('Polling paused');
       } else {
@@ -124,12 +123,13 @@ app.whenReady().then(() => {
   powerMonitor.on('resume', () => {
     log('System resumed from sleep, polling immediately');
     if (!getIsPaused() && hasToken()) {
-      pollNow();
+      void pollNow();
     }
   });
 
   app.on('before-quit', () => {
     stopPolling();
     log('GitHub Notify shutting down');
+    void flushLogs();
   });
 });

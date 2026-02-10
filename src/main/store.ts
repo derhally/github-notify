@@ -1,6 +1,6 @@
 import { safeStorage } from 'electron';
 import Store from 'electron-store';
-import { AppSettings, NotificationMode, SeenEntry } from '../shared/types';
+import { AppSettings, NotificationMode, NotificationSound, SeenEntry } from '../shared/types';
 
 interface StoreSchema {
   encryptedToken: string;
@@ -14,7 +14,7 @@ const store = new Store<StoreSchema>({
     settings: {
       pollInterval: 300,
       notificationMode: NotificationMode.Both,
-      notificationSound: 'default',
+      notificationSound: NotificationSound.Default,
       customSoundPath: '',
       autoStart: true,
       filters: [],

@@ -13,6 +13,8 @@ import { TrayState, GitHubPR, SeenEntry, getPRKey, isOctokitError } from '../sha
 
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let isPolling = false;
+let pollCount = 0;
+const PRUNE_EVERY_N_POLLS = 12;
 
 function filterByAllowlist(prs: GitHubPR[], filters: string[]): GitHubPR[] {
   if (filters.length === 0) return prs;
@@ -89,11 +91,16 @@ export async function pollNow(): Promise<void> {
     log(`Found ${filteredPRs.length} total PRs, ${newPRs.length} new`);
 
     if (newPRs.length > 0) {
-      await notifyNewPRs(newPRs, settings.notificationMode, settings.notificationSound, settings.customSoundPath);
+      notifyNewPRs(newPRs, settings.notificationMode, settings.notificationSound, settings.customSoundPath);
     }
 
     const updatedSeen = updateSeenSet(filteredPRs, seenEntries);
     saveSeenPRs(updatedSeen);
+
+    pollCount++;
+    if (pollCount % PRUNE_EVERY_N_POLLS === 0) {
+      pruneSeenPRs();
+    }
 
     setTrayState(TrayState.Normal);
     const now = new Date().toLocaleTimeString();
@@ -122,8 +129,8 @@ export function startPolling(): void {
   const intervalMs = settings.pollInterval * 1000;
 
   log(`Starting polling every ${settings.pollInterval}s`);
-  pollNow();
-  pollTimer = setInterval(() => pollNow(), intervalMs);
+  void pollNow();
+  pollTimer = setInterval(() => void pollNow(), intervalMs);
 }
 
 export function stopPolling(): void {

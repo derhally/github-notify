@@ -1,10 +1,11 @@
-import { Tray, Menu, nativeImage, MenuItemConstructorOptions } from 'electron';
+import { Tray, Menu, nativeImage, NativeImage, MenuItemConstructorOptions } from 'electron';
 import path from 'node:path';
 import { TrayState } from '../shared/types';
 
 let tray: Tray | null = null;
 let currentState: TrayState = TrayState.Unconfigured;
 let isPaused = false;
+let iconCache: Map<TrayState, NativeImage> | null = null;
 
 interface TrayCallbacks {
   onCheckNow: () => void;
@@ -16,13 +17,27 @@ interface TrayCallbacks {
 
 let callbacks: TrayCallbacks;
 
-function getIconPath(state: TrayState): string {
-  const iconMap: Record<TrayState, string> = {
-    [TrayState.Normal]: 'tray-icon.png',
-    [TrayState.Error]: 'tray-icon-error.png',
-    [TrayState.Unconfigured]: 'tray-icon-unconfigured.png',
-  };
-  return path.join(__dirname, '../../assets', iconMap[state]);
+const ICON_FILENAMES: Record<TrayState, string> = {
+  [TrayState.Normal]: 'tray-icon.png',
+  [TrayState.Error]: 'tray-icon-error.png',
+  [TrayState.Unconfigured]: 'tray-icon-unconfigured.png',
+};
+
+function loadIcons(): Map<TrayState, NativeImage> {
+  const cache = new Map<TrayState, NativeImage>();
+  for (const state of Object.values(TrayState)) {
+    const iconPath = path.join(__dirname, '../../assets', ICON_FILENAMES[state]);
+    const icon = nativeImage.createFromPath(iconPath);
+    cache.set(state, icon.isEmpty() ? nativeImage.createEmpty() : icon);
+  }
+  return cache;
+}
+
+function getIcon(state: TrayState): NativeImage {
+  if (!iconCache) {
+    iconCache = loadIcons();
+  }
+  return iconCache.get(state) || nativeImage.createEmpty();
 }
 
 function buildContextMenu(): Menu {
@@ -68,9 +83,7 @@ function updateContextMenu(): void {
 export function createTray(cbs: TrayCallbacks): Tray {
   callbacks = cbs;
 
-  const iconPath = getIconPath(currentState);
-  const icon = nativeImage.createFromPath(iconPath);
-  tray = new Tray(icon.isEmpty() ? nativeImage.createEmpty() : icon);
+  tray = new Tray(getIcon(currentState));
   tray.setToolTip('GitHub Notify - Not configured');
   tray.setContextMenu(buildContextMenu());
 
@@ -86,11 +99,7 @@ export function setTrayState(state: TrayState): void {
   currentState = state;
   if (!tray) return;
 
-  const iconPath = getIconPath(state);
-  const icon = nativeImage.createFromPath(iconPath);
-  if (!icon.isEmpty()) {
-    tray.setImage(icon);
-  }
+  tray.setImage(getIcon(state));
   updateContextMenu();
 }
 

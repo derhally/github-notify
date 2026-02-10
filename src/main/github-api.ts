@@ -14,21 +14,18 @@ interface ETagCache {
   data: GitHubPR[];
 }
 
-const etagCaches: Record<string, ETagCache> = {
+type CacheKey = 'assigned' | 'reviewRequested';
+
+const etagCaches: Record<CacheKey, ETagCache> = {
   assigned: { etag: null, data: [] },
   reviewRequested: { etag: null, data: [] },
 };
 
-type SearchItem = {
-  pull_request?: { html_url?: string };
-  repository_url: string;
-  user: { login: string } | null;
-  number: number;
-  title: string;
-  html_url: string;
-};
+type SearchResultItem = Awaited<
+  ReturnType<InstanceType<typeof ThrottledOctokit>['rest']['search']['issuesAndPullRequests']>
+>['data']['items'][number];
 
-function parseSearchResults(items: SearchItem[]): GitHubPR[] {
+function parseSearchResults(items: SearchResultItem[]): GitHubPR[] {
   return items
     .filter((item) => item.pull_request)
     .map((item) => {
@@ -50,6 +47,8 @@ export function initOctokit(token: string): void {
 
   currentToken = token;
   cachedUsername = null;
+  etagCaches.assigned = { etag: null, data: [] };
+  etagCaches.reviewRequested = { etag: null, data: [] };
   octokit = new ThrottledOctokit({
     auth: token,
     throttle: {
@@ -82,7 +81,7 @@ export async function getAuthenticatedUser(): Promise<string> {
 
 async function searchPRs(
   query: string,
-  cacheKey: string,
+  cacheKey: CacheKey,
 ): Promise<{ prs: GitHubPR[]; changed: boolean }> {
   if (!octokit) throw new Error('Octokit not initialized');
 
@@ -93,7 +92,7 @@ async function searchPRs(
   }
 
   try {
-    const response = await octokit.request('GET /search/issues', {
+    const response = await octokit.rest.search.issuesAndPullRequests({
       q: query,
       sort: 'updated',
       order: 'desc',
@@ -102,8 +101,7 @@ async function searchPRs(
     });
 
     const etag = response.headers.etag || null;
-    const items = (response.data.items as unknown as SearchItem[]);
-    const prs = parseSearchResults(items);
+    const prs = parseSearchResults(response.data.items);
 
     etagCaches[cacheKey] = { etag, data: prs };
     return { prs, changed: true };

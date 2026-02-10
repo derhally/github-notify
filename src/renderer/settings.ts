@@ -37,9 +37,9 @@ app.innerHTML = `
   <div class="form-group">
     <label for="notification-sound">Notification Sound</label>
     <select id="notification-sound">
-      <option value="default">System Default</option>
-      <option value="custom">Custom Sound</option>
-      <option value="none">None</option>
+      <option value="${NotificationSound.Default}">System Default</option>
+      <option value="${NotificationSound.Custom}">Custom Sound</option>
+      <option value="${NotificationSound.None}">None</option>
     </select>
   </div>
 
@@ -97,7 +97,7 @@ toggleVisibilityBtn.addEventListener('click', () => {
 });
 
 notificationSoundSelect.addEventListener('change', () => {
-  customSoundGroup.style.display = notificationSoundSelect.value === 'custom' ? '' : 'none';
+  customSoundGroup.style.display = notificationSoundSelect.value === NotificationSound.Custom ? '' : 'none';
 });
 
 browseSoundBtn.addEventListener('click', async () => {
@@ -119,41 +119,57 @@ testConnectionBtn.addEventListener('click', async () => {
   testConnectionBtn.textContent = 'Testing...';
   tokenStatus.textContent = '';
 
-  const result = await window.electronAPI.testConnection(token);
-  tokenStatus.textContent = result.message;
-  tokenStatus.className = `status-message ${result.success ? 'success' : 'error'}`;
-
-  testConnectionBtn.disabled = false;
-  testConnectionBtn.textContent = 'Test';
+  try {
+    const result = await window.electronAPI.testConnection(token);
+    tokenStatus.textContent = result.message;
+    tokenStatus.className = `status-message ${result.success ? 'success' : 'error'}`;
+  } catch {
+    tokenStatus.textContent = 'Connection test failed unexpectedly.';
+    tokenStatus.className = 'status-message error';
+  } finally {
+    testConnectionBtn.disabled = false;
+    testConnectionBtn.textContent = 'Test';
+  }
 });
 
 saveBtn.addEventListener('click', async () => {
-  const token = tokenInput.value.trim();
-  if (token) {
-    await window.electronAPI.saveToken(token);
+  saveBtn.disabled = true;
+
+  try {
+    const token = tokenInput.value.trim();
+    if (token) {
+      await window.electronAPI.saveToken(token);
+    }
+
+    const pollInterval = Math.max(60, Math.min(3600, parseInt(pollIntervalInput.value, 10) || 300));
+    pollIntervalInput.value = String(pollInterval);
+
+    const filters = filtersTextarea.value
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    await window.electronAPI.saveSettings({
+      pollInterval,
+      notificationMode: notificationModeSelect.value as NotificationMode,
+      notificationSound: notificationSoundSelect.value as NotificationSound,
+      customSoundPath: customSoundPathInput.value,
+      autoStart: autoStartCheckbox.checked,
+      filters,
+    });
+
+    saveBtn.textContent = 'Saved!';
+    setTimeout(() => {
+      saveBtn.textContent = 'Save Settings';
+    }, 1500);
+  } catch {
+    saveBtn.textContent = 'Save Failed';
+    setTimeout(() => {
+      saveBtn.textContent = 'Save Settings';
+    }, 2000);
+  } finally {
+    saveBtn.disabled = false;
   }
-
-  const pollInterval = Math.max(60, Math.min(3600, parseInt(pollIntervalInput.value, 10) || 300));
-  pollIntervalInput.value = String(pollInterval);
-
-  const filters = filtersTextarea.value
-    .split('\n')
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  await window.electronAPI.saveSettings({
-    pollInterval,
-    notificationMode: notificationModeSelect.value as NotificationMode,
-    notificationSound: notificationSoundSelect.value as NotificationSound,
-    customSoundPath: customSoundPathInput.value,
-    autoStart: autoStartCheckbox.checked,
-    filters,
-  });
-
-  saveBtn.textContent = 'Saved!';
-  setTimeout(() => {
-    saveBtn.textContent = 'Save Settings';
-  }, 1500);
 });
 
 async function loadSettings(): Promise<void> {
@@ -162,7 +178,7 @@ async function loadSettings(): Promise<void> {
   notificationModeSelect.value = settings.notificationMode;
   notificationSoundSelect.value = settings.notificationSound;
   customSoundPathInput.value = settings.customSoundPath;
-  customSoundGroup.style.display = settings.notificationSound === 'custom' ? '' : 'none';
+  customSoundGroup.style.display = settings.notificationSound === NotificationSound.Custom ? '' : 'none';
   autoStartCheckbox.checked = settings.autoStart;
   filtersTextarea.value = settings.filters.join('\n');
 

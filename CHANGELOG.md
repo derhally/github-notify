@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.7.0](https://github.com/derhally/github-notify/compare/v0.6.0...v0.7.0) (2026-02-10)
+
+
+### Features
+
+* quiet hours and snooze ([#7](https://github.com/derhally/github-notify/issues/7)) ([2b18825](https://github.com/derhally/github-notify/commit/2b18825a14c81dde201b324945ea114cb424f198))
+
 ## [0.6.0](https://github.com/derhally/github-notify/compare/github-notify-v0.5.0...github-notify-v0.6.0) (2026-02-10)
 
 

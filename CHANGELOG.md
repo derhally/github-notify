@@ -1,5 +1,17 @@
 # Changelog
 
+## [0.8.0](https://github.com/derhally/github-notify/compare/v0.7.0...v0.8.0) (2026-02-10)
+
+
+### Bug Fixes
+
+* **ci:** move build into release-please workflow ([#9](https://github.com/derhally/github-notify/issues/9)) ([1bac922](https://github.com/derhally/github-notify/commit/1bac9223c8245687d880bb85f82dd1eee7e31d3f))
+
+
+### Miscellaneous Chores
+
+* release 0.8.0 ([804bdd7](https://github.com/derhally/github-notify/commit/804bdd7fd0f3731ab9845ef921c8fd789814e6be))
+
 ## [0.7.0](https://github.com/derhally/github-notify/compare/v0.6.0...v0.7.0) (2026-02-10)
 
 

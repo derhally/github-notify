@@ -38,6 +38,10 @@ function showSummaryToast(count: number, silent: boolean): void {
     silent,
   });
 
+  notification.once('click', () => {
+    shell.openExternal('https://github.com/notifications');
+  });
+
   notification.show();
 }
 

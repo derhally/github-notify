@@ -1,7 +1,7 @@
 {
   "name": "github-notify",
   "productName": "GitHub Notify",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "Windows system tray app that monitors GitHub for PR assignments and notifies you",
   "main": ".vite/build/main.js",
   "private": true,

@@ -22,6 +22,7 @@ const store = new Store<StoreSchema>({
       quietHoursEnabled: false,
       quietHoursStart: '22:00',
       quietHoursEnd: '08:00',
+      micMuteEnabled: true,
     },
     seenPRs: [],
     snoozeUntil: 0,

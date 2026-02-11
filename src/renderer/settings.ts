@@ -73,6 +73,17 @@ app.innerHTML = `
 
   <div class="form-group">
     <div class="toggle-row">
+      <label>Mute During Calls</label>
+      <label class="toggle">
+        <input type="checkbox" id="mic-mute-enabled" />
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    <div class="hint">Automatically suppress notifications when your microphone is in use.</div>
+  </div>
+
+  <div class="form-group">
+    <div class="toggle-row">
       <label>Start with Windows</label>
       <label class="toggle">
         <input type="checkbox" id="auto-start" />
@@ -106,6 +117,7 @@ const quietHoursEnabledCheckbox = document.getElementById('quiet-hours-enabled')
 const quietHoursTimesGroup = document.getElementById('quiet-hours-times') as HTMLDivElement;
 const quietHoursStartInput = document.getElementById('quiet-hours-start') as HTMLInputElement;
 const quietHoursEndInput = document.getElementById('quiet-hours-end') as HTMLInputElement;
+const micMuteEnabledCheckbox = document.getElementById('mic-mute-enabled') as HTMLInputElement;
 const autoStartCheckbox = document.getElementById('auto-start') as HTMLInputElement;
 const filtersTextarea = document.getElementById('filters') as HTMLTextAreaElement;
 const saveBtn = document.getElementById('save') as HTMLButtonElement;
@@ -187,6 +199,7 @@ saveBtn.addEventListener('click', async () => {
       quietHoursEnabled: quietHoursEnabledCheckbox.checked,
       quietHoursStart: quietHoursStartInput.value || '22:00',
       quietHoursEnd: quietHoursEndInput.value || '08:00',
+      micMuteEnabled: micMuteEnabledCheckbox.checked,
     });
 
     saveBtn.textContent = 'Saved!';
@@ -214,6 +227,7 @@ async function loadSettings(): Promise<void> {
   quietHoursStartInput.value = settings.quietHoursStart;
   quietHoursEndInput.value = settings.quietHoursEnd;
   quietHoursTimesGroup.style.display = settings.quietHoursEnabled ? '' : 'none';
+  micMuteEnabledCheckbox.checked = settings.micMuteEnabled;
   autoStartCheckbox.checked = settings.autoStart;
   filtersTextarea.value = settings.filters.join('\n');
 

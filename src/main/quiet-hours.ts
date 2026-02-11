@@ -1,5 +1,5 @@
-import { getSettings } from './store';
-import { getSnoozeUntil, clearSnooze } from './store';
+import { getSettings, getSnoozeUntil, clearSnooze } from './store';
+import { isMicActive } from './mic-detector';
 
 function parseTime(time: string): { hours: number; minutes: number } {
   const [hours, minutes] = time.split(':').map(Number);
@@ -40,6 +40,11 @@ export function isNotificationSuppressed(): boolean {
   if (isSnoozed()) return true;
 
   const settings = getSettings();
+
+  if (settings.micMuteEnabled && isMicActive()) {
+    return true;
+  }
+
   if (settings.quietHoursEnabled && isInQuietHours(settings.quietHoursStart, settings.quietHoursEnd)) {
     return true;
   }

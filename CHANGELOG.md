@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.0](https://github.com/derhally/github-notify/compare/v0.8.0...v0.9.0) (2026-02-11)
+
+
+### Features
+
+* auto-mute notifications when microphone is in use ([#11](https://github.com/derhally/github-notify/issues/11)) ([e3b0e5c](https://github.com/derhally/github-notify/commit/e3b0e5cf8423df9bea94819d22c7b644d58a9e42))
+
 ## [0.8.0](https://github.com/derhally/github-notify/compare/v0.7.0...v0.8.0) (2026-02-10)
 
 

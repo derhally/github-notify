@@ -42,7 +42,8 @@ function isValidSettings(value: unknown): value is AppSettings {
     typeof obj.quietHoursStart === 'string' &&
     isValidTime(obj.quietHoursStart) &&
     typeof obj.quietHoursEnd === 'string' &&
-    isValidTime(obj.quietHoursEnd)
+    isValidTime(obj.quietHoursEnd) &&
+    typeof obj.micMuteEnabled === 'boolean'
   );
 }
 

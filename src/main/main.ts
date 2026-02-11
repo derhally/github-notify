@@ -7,7 +7,8 @@ import { startPolling, stopPolling, restartPolling, pollNow } from './poller';
 import { hasToken, getSettings, getSnoozeUntil, setSnoozeUntil, clearSnooze } from './store';
 import { setAutoLaunch } from './auto-launch';
 import { log, flushLogs, getLogFilePath } from './logger';
-import { isNotificationSuppressed } from './quiet-hours';
+import { isInQuietHours } from './quiet-hours';
+import { startMicDetection, stopMicDetection, isMicActive, checkMicNow } from './mic-detector';
 import { TrayState } from '../shared/types';
 
 if (started) {
@@ -33,11 +34,29 @@ function clearSnoozeTimer(): void {
 
 function updateTrayForSuppression(): void {
   if (!hasToken()) return;
-  if (isNotificationSuppressed()) {
+
+  const snoozeUntil = getSnoozeUntil();
+  if (snoozeUntil > Date.now()) {
     setTrayState(TrayState.Quiet);
-  } else {
-    setTrayState(TrayState.Normal);
+    setTrayTooltip(`GitHub Notify - Snoozed until ${new Date(snoozeUntil).toLocaleTimeString()}`);
+    return;
   }
+
+  const settings = getSettings();
+  if (settings.micMuteEnabled && isMicActive()) {
+    setTrayState(TrayState.Quiet);
+    setTrayTooltip('GitHub Notify - Mic in use, notifications paused');
+    return;
+  }
+
+  if (settings.quietHoursEnabled && isInQuietHours(settings.quietHoursStart, settings.quietHoursEnd)) {
+    setTrayState(TrayState.Quiet);
+    setTrayTooltip('GitHub Notify - Quiet hours active');
+    return;
+  }
+
+  setTrayState(TrayState.Normal);
+  setTrayTooltip('GitHub Notify');
 }
 
 function scheduleSnoozeExpiry(until: number): void {
@@ -58,8 +77,7 @@ function activateSnooze(durationMinutes: number): void {
   const until = Date.now() + durationMinutes * 60_000;
   setSnoozeUntil(until);
   setSnoozeEndTime(until);
-  setTrayState(TrayState.Quiet);
-  setTrayTooltip(`GitHub Notify - Snoozed until ${new Date(until).toLocaleTimeString()}`);
+  updateTrayForSuppression();
   scheduleSnoozeExpiry(until);
   log(`Snoozed for ${durationMinutes} minutes (until ${new Date(until).toLocaleTimeString()})`);
 }
@@ -110,10 +128,21 @@ function openSettings(): void {
   });
 }
 
+function onMicStateChange(): void {
+  updateTrayForSuppression();
+}
+
 function onSettingsChanged(): void {
   const settings = getSettings();
   setAutoLaunch(settings.autoStart);
   restartPolling();
+
+  if (settings.micMuteEnabled) {
+    startMicDetection(onMicStateChange);
+  } else {
+    stopMicDetection();
+  }
+
   updateTrayForSuppression();
   log('Settings changed, polling restarted');
 }
@@ -174,15 +203,19 @@ app.whenReady().then(() => {
     const persistedSnooze = getSnoozeUntil();
     if (persistedSnooze > Date.now()) {
       setSnoozeEndTime(persistedSnooze);
-      setTrayState(TrayState.Quiet);
-      setTrayTooltip(`GitHub Notify - Snoozed until ${new Date(persistedSnooze).toLocaleTimeString()}`);
       scheduleSnoozeExpiry(persistedSnooze);
       log(`Restored snooze until ${new Date(persistedSnooze).toLocaleTimeString()}`);
     } else if (persistedSnooze > 0) {
       clearSnooze();
     }
 
-    // Apply quiet hours tray state if active
+    // Start mic detection if enabled
+    const settings = getSettings();
+    if (settings.micMuteEnabled) {
+      startMicDetection(onMicStateChange);
+    }
+
+    // Apply suppression tray state if active
     updateTrayForSuppression();
   } else {
     setTrayState(TrayState.Unconfigured);
@@ -197,10 +230,14 @@ app.whenReady().then(() => {
     if (!getIsPaused() && hasToken()) {
       void pollNow();
     }
+    if (getSettings().micMuteEnabled) {
+      checkMicNow(onMicStateChange);
+    }
   });
 
   app.on('before-quit', () => {
     stopPolling();
+    stopMicDetection();
     log('GitHub Notify shutting down');
     void flushLogs();
   });

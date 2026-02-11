@@ -27,6 +27,7 @@ export interface AppSettings {
   quietHoursEnabled: boolean;
   quietHoursStart: string;
   quietHoursEnd: string;
+  micMuteEnabled: boolean;
 }
 
 export interface GitHubPR {

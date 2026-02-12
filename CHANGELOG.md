@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.2](https://github.com/derhally/github-notify/compare/v0.9.1...v0.9.2) (2026-02-12)
+
+
+### Bug Fixes
+
+* replace tray icons with robot face and fix icon path resolution ([a3dd121](https://github.com/derhally/github-notify/commit/a3dd121cc8911ed28722b0ed92573e46e81d65e5))
+
 ## [0.9.1](https://github.com/derhally/github-notify/compare/v0.9.0...v0.9.1) (2026-02-12)
 
 

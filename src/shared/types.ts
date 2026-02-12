@@ -1,9 +1,3 @@
-export enum NotificationMode {
-  Toast = 'toast',
-  TTS = 'tts',
-  Both = 'both',
-}
-
 export enum TrayState {
   Normal = 'normal',
   Error = 'error',
@@ -11,16 +5,11 @@ export enum TrayState {
   Quiet = 'quiet',
 }
 
-export enum NotificationSound {
-  None = 'none',
-  Default = 'default',
-  Custom = 'custom',
-}
-
 export interface AppSettings {
   pollInterval: number;
-  notificationMode: NotificationMode;
-  notificationSound: NotificationSound;
+  soundEnabled: boolean;
+  toastEnabled: boolean;
+  ttsEnabled: boolean;
   customSoundPath: string;
   autoStart: boolean;
   filters: string[];
@@ -48,7 +37,7 @@ export interface ElectronAPI {
   saveSettings: (settings: AppSettings) => Promise<void>;
   saveToken: (token: string) => Promise<void>;
   hasToken: () => Promise<boolean>;
-  testConnection: (token: string) => Promise<{ success: boolean; username?: string; message: string }>;
+  testConnection: (token?: string) => Promise<{ success: boolean; username?: string; message: string }>;
   openSoundFileDialog: () => Promise<string | null>;
 }
 

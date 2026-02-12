@@ -1,5 +1,5 @@
 import { Notification, shell } from 'electron';
-import { GitHubPR, NotificationMode, NotificationSound } from '../shared/types';
+import { GitHubPR } from '../shared/types';
 import { speak } from './tts';
 import { playCustomSound } from './sound';
 import { log } from './logger';
@@ -76,8 +76,9 @@ async function speakPRs(prs: GitHubPR[], remaining: number): Promise<void> {
 
 export function notifyNewPRs(
   prs: GitHubPR[],
-  mode: NotificationMode,
-  sound: NotificationSound,
+  soundEnabled: boolean,
+  toastEnabled: boolean,
+  ttsEnabled: boolean,
   customSoundPath: string,
 ): void {
   if (prs.length === 0) return;
@@ -86,13 +87,13 @@ export function notifyNewPRs(
   const remaining = prs.length - MAX_INDIVIDUAL_NOTIFICATIONS;
 
   // Suppress toast sound when using custom sound or no sound
-  const silentToast = sound !== NotificationSound.Default;
+  const silentToast = !soundEnabled || !!customSoundPath;
 
-  if (sound === NotificationSound.Custom && customSoundPath) {
+  if (soundEnabled && customSoundPath) {
     playCustomSound(customSoundPath);
   }
 
-  if (mode === NotificationMode.Toast || mode === NotificationMode.Both) {
+  if (toastEnabled) {
     for (const pr of toNotifyIndividually) {
       showToast(pr, silentToast);
     }
@@ -101,7 +102,7 @@ export function notifyNewPRs(
     }
   }
 
-  if (mode === NotificationMode.TTS || mode === NotificationMode.Both) {
+  if (ttsEnabled) {
     void speakPRs(toNotifyIndividually, remaining);
   }
 }

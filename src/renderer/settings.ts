@@ -1,5 +1,4 @@
 import './styles.css';
-import { NotificationMode, NotificationSound } from '../shared/types';
 
 const app = document.getElementById('app')!;
 
@@ -26,21 +25,21 @@ app.innerHTML = `
   </div>
 
   <div class="form-group">
-    <label for="notification-mode">Notification Mode</label>
-    <select id="notification-mode">
-      <option value="${NotificationMode.Toast}">Toast Notification</option>
-      <option value="${NotificationMode.TTS}">Text-to-Speech</option>
-      <option value="${NotificationMode.Both}">Both</option>
-    </select>
-  </div>
-
-  <div class="form-group">
-    <label for="notification-sound">Notification Sound</label>
-    <select id="notification-sound">
-      <option value="${NotificationSound.Default}">System Default</option>
-      <option value="${NotificationSound.Custom}">Custom Sound</option>
-      <option value="${NotificationSound.None}">None</option>
-    </select>
+    <label>Notifications</label>
+    <div class="checkbox-group">
+      <label class="checkbox-label">
+        <input type="checkbox" id="sound-enabled" />
+        Notification Sound
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="toast-enabled" />
+        Toast
+      </label>
+      <label class="checkbox-label">
+        <input type="checkbox" id="tts-enabled" />
+        Text-to-Speech
+      </label>
+    </div>
   </div>
 
   <div class="form-group" id="custom-sound-group" style="display: none;">
@@ -49,6 +48,7 @@ app.innerHTML = `
       <input type="text" id="custom-sound-path" readonly placeholder="No file selected" />
       <button type="button" id="browse-sound">Browse</button>
     </div>
+    <div class="hint">Leave empty to use the system default sound.</div>
   </div>
 
   <div class="form-group">
@@ -108,8 +108,9 @@ const toggleVisibilityBtn = document.getElementById('toggle-visibility') as HTML
 const testConnectionBtn = document.getElementById('test-connection') as HTMLButtonElement;
 const tokenStatus = document.getElementById('token-status') as HTMLDivElement;
 const pollIntervalInput = document.getElementById('poll-interval') as HTMLInputElement;
-const notificationModeSelect = document.getElementById('notification-mode') as HTMLSelectElement;
-const notificationSoundSelect = document.getElementById('notification-sound') as HTMLSelectElement;
+const soundEnabledCheckbox = document.getElementById('sound-enabled') as HTMLInputElement;
+const toastEnabledCheckbox = document.getElementById('toast-enabled') as HTMLInputElement;
+const ttsEnabledCheckbox = document.getElementById('tts-enabled') as HTMLInputElement;
 const customSoundGroup = document.getElementById('custom-sound-group') as HTMLDivElement;
 const customSoundPathInput = document.getElementById('custom-sound-path') as HTMLInputElement;
 const browseSoundBtn = document.getElementById('browse-sound') as HTMLButtonElement;
@@ -122,6 +123,15 @@ const autoStartCheckbox = document.getElementById('auto-start') as HTMLInputElem
 const filtersTextarea = document.getElementById('filters') as HTMLTextAreaElement;
 const saveBtn = document.getElementById('save') as HTMLButtonElement;
 
+const notificationCheckboxes = [soundEnabledCheckbox, toastEnabledCheckbox, ttsEnabledCheckbox];
+
+function enforceAtLeastOneChecked(changed: HTMLInputElement): void {
+  const anyChecked = notificationCheckboxes.some((cb) => cb.checked);
+  if (!anyChecked) {
+    changed.checked = true;
+  }
+}
+
 toggleVisibilityBtn.addEventListener('click', () => {
   if (tokenInput.type === 'password') {
     tokenInput.type = 'text';
@@ -132,8 +142,17 @@ toggleVisibilityBtn.addEventListener('click', () => {
   }
 });
 
-notificationSoundSelect.addEventListener('change', () => {
-  customSoundGroup.style.display = notificationSoundSelect.value === NotificationSound.Custom ? '' : 'none';
+soundEnabledCheckbox.addEventListener('change', () => {
+  enforceAtLeastOneChecked(soundEnabledCheckbox);
+  customSoundGroup.style.display = soundEnabledCheckbox.checked ? '' : 'none';
+});
+
+toastEnabledCheckbox.addEventListener('change', () => {
+  enforceAtLeastOneChecked(toastEnabledCheckbox);
+});
+
+ttsEnabledCheckbox.addEventListener('change', () => {
+  enforceAtLeastOneChecked(ttsEnabledCheckbox);
 });
 
 quietHoursEnabledCheckbox.addEventListener('change', () => {
@@ -149,18 +168,13 @@ browseSoundBtn.addEventListener('click', async () => {
 
 testConnectionBtn.addEventListener('click', async () => {
   const token = tokenInput.value.trim();
-  if (!token) {
-    tokenStatus.textContent = 'Please enter a token first.';
-    tokenStatus.className = 'status-message error';
-    return;
-  }
 
   testConnectionBtn.disabled = true;
   testConnectionBtn.textContent = 'Testing...';
   tokenStatus.textContent = '';
 
   try {
-    const result = await window.electronAPI.testConnection(token);
+    const result = await window.electronAPI.testConnection(token || undefined);
     tokenStatus.textContent = result.message;
     tokenStatus.className = `status-message ${result.success ? 'success' : 'error'}`;
   } catch {
@@ -191,8 +205,9 @@ saveBtn.addEventListener('click', async () => {
 
     await window.electronAPI.saveSettings({
       pollInterval,
-      notificationMode: notificationModeSelect.value as NotificationMode,
-      notificationSound: notificationSoundSelect.value as NotificationSound,
+      soundEnabled: soundEnabledCheckbox.checked,
+      toastEnabled: toastEnabledCheckbox.checked,
+      ttsEnabled: ttsEnabledCheckbox.checked,
       customSoundPath: customSoundPathInput.value,
       autoStart: autoStartCheckbox.checked,
       filters,
@@ -219,10 +234,11 @@ saveBtn.addEventListener('click', async () => {
 async function loadSettings(): Promise<void> {
   const settings = await window.electronAPI.getSettings();
   pollIntervalInput.value = String(settings.pollInterval);
-  notificationModeSelect.value = settings.notificationMode;
-  notificationSoundSelect.value = settings.notificationSound;
+  soundEnabledCheckbox.checked = settings.soundEnabled;
+  toastEnabledCheckbox.checked = settings.toastEnabled;
+  ttsEnabledCheckbox.checked = settings.ttsEnabled;
   customSoundPathInput.value = settings.customSoundPath;
-  customSoundGroup.style.display = settings.notificationSound === NotificationSound.Custom ? '' : 'none';
+  customSoundGroup.style.display = settings.soundEnabled ? '' : 'none';
   quietHoursEnabledCheckbox.checked = settings.quietHoursEnabled;
   quietHoursStartInput.value = settings.quietHoursStart;
   quietHoursEndInput.value = settings.quietHoursEnd;
@@ -234,6 +250,8 @@ async function loadSettings(): Promise<void> {
   const hasExistingToken = await window.electronAPI.hasToken();
   if (hasExistingToken) {
     tokenInput.placeholder = '••••••••••••••••••• (token saved)';
+    tokenStatus.textContent = 'Token is saved. Enter a new token to replace it.';
+    tokenStatus.className = 'status-message success';
   }
 }
 

@@ -1,6 +1,6 @@
 import { safeStorage } from 'electron';
 import Store from 'electron-store';
-import { AppSettings, NotificationMode, NotificationSound, SeenEntry } from '../shared/types';
+import { AppSettings, SeenEntry } from '../shared/types';
 
 interface StoreSchema {
   encryptedToken: string;
@@ -14,8 +14,9 @@ const store = new Store<StoreSchema>({
     encryptedToken: '',
     settings: {
       pollInterval: 300,
-      notificationMode: NotificationMode.Both,
-      notificationSound: NotificationSound.Default,
+      soundEnabled: true,
+      toastEnabled: true,
+      ttsEnabled: true,
       customSoundPath: '',
       autoStart: true,
       filters: [],
@@ -28,6 +29,48 @@ const store = new Store<StoreSchema>({
     snoozeUntil: 0,
   },
 });
+
+function migrateSettings(): void {
+  const raw = store.get('settings') as unknown as Record<string, unknown>;
+
+  // Already migrated
+  if (typeof raw.soundEnabled === 'boolean') return;
+
+  const mode = raw.notificationMode as string | undefined;
+  const sound = raw.notificationSound as string | undefined;
+
+  let toastEnabled = true;
+  let ttsEnabled = true;
+  let soundEnabled = true;
+
+  if (mode === 'toast') {
+    toastEnabled = true;
+    ttsEnabled = false;
+  } else if (mode === 'tts') {
+    toastEnabled = false;
+    ttsEnabled = true;
+  } else if (mode === 'both') {
+    toastEnabled = true;
+    ttsEnabled = true;
+  }
+
+  if (sound === 'none') {
+    soundEnabled = false;
+  } else {
+    soundEnabled = true;
+  }
+
+  delete raw.notificationMode;
+  delete raw.notificationSound;
+
+  raw.soundEnabled = soundEnabled;
+  raw.toastEnabled = toastEnabled;
+  raw.ttsEnabled = ttsEnabled;
+
+  store.set('settings', raw as unknown as AppSettings);
+}
+
+migrateSettings();
 
 export function saveToken(token: string): void {
   if (!safeStorage.isEncryptionAvailable()) {

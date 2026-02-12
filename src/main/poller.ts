@@ -92,7 +92,7 @@ export async function pollNow(): Promise<void> {
     log(`Found ${filteredPRs.length} total PRs, ${newPRs.length} new`);
 
     if (newPRs.length > 0 && !isNotificationSuppressed()) {
-      notifyNewPRs(newPRs, settings.notificationMode, settings.notificationSound, settings.customSoundPath);
+      notifyNewPRs(newPRs, settings.soundEnabled, settings.toastEnabled, settings.ttsEnabled, settings.customSoundPath);
     } else if (newPRs.length > 0) {
       log(`${newPRs.length} new PRs suppressed (quiet hours/snooze active)`);
     }

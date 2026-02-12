@@ -1,4 +1,4 @@
-import { Tray, Menu, nativeImage, NativeImage, MenuItemConstructorOptions } from 'electron';
+import { app, Tray, Menu, nativeImage, NativeImage, MenuItemConstructorOptions, nativeTheme } from 'electron';
 import path from 'node:path';
 import { TrayState } from '../shared/types';
 
@@ -27,10 +27,22 @@ const ICON_FILENAMES: Record<TrayState, string> = {
   [TrayState.Quiet]: 'tray-icon-quiet.png',
 };
 
+const LIGHT_THEME_OVERRIDES: Partial<Record<TrayState, string>> = {
+  [TrayState.Normal]: 'tray-icon-dark.png',
+};
+
+function getIconFilename(state: TrayState): string {
+  if (!nativeTheme.shouldUseDarkColors) {
+    const override = LIGHT_THEME_OVERRIDES[state];
+    if (override) return override;
+  }
+  return ICON_FILENAMES[state];
+}
+
 function loadIcons(): Map<TrayState, NativeImage> {
   const cache = new Map<TrayState, NativeImage>();
   for (const state of Object.values(TrayState)) {
-    const iconPath = path.join(__dirname, '../../assets', ICON_FILENAMES[state]);
+    const iconPath = path.join(app.getAppPath(), 'assets', getIconFilename(state));
     const icon = nativeImage.createFromPath(iconPath);
     cache.set(state, icon.isEmpty() ? nativeImage.createEmpty() : icon);
   }
@@ -42,6 +54,13 @@ function getIcon(state: TrayState): NativeImage {
     iconCache = loadIcons();
   }
   return iconCache.get(state) || nativeImage.createEmpty();
+}
+
+function onThemeUpdated(): void {
+  iconCache = null;
+  if (tray) {
+    tray.setImage(getIcon(currentState));
+  }
 }
 
 function formatSnoozeRemaining(): string {
@@ -134,6 +153,8 @@ export function createTray(cbs: TrayCallbacks): Tray {
   tray.on('click', () => {
     tray?.popUpContextMenu();
   });
+
+  nativeTheme.on('updated', onThemeUpdated);
 
   return tray;
 }

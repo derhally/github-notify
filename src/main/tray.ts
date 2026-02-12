@@ -1,4 +1,4 @@
-import { app, Tray, Menu, nativeImage, NativeImage, MenuItemConstructorOptions, nativeTheme } from 'electron';
+import { Tray, Menu, nativeImage, NativeImage, MenuItemConstructorOptions, nativeTheme } from 'electron';
 import path from 'node:path';
 import { TrayState } from '../shared/types';
 
@@ -42,7 +42,7 @@ function getIconFilename(state: TrayState): string {
 function loadIcons(): Map<TrayState, NativeImage> {
   const cache = new Map<TrayState, NativeImage>();
   for (const state of Object.values(TrayState)) {
-    const iconPath = path.join(app.getAppPath(), 'assets', getIconFilename(state));
+    const iconPath = path.join(__dirname, 'assets', getIconFilename(state));
     const icon = nativeImage.createFromPath(iconPath);
     cache.set(state, icon.isEmpty() ? nativeImage.createEmpty() : icon);
   }

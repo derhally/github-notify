@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.9.1](https://github.com/derhally/github-notify/compare/v0.9.0...v0.9.1) (2026-02-12)
+
+
+### Bug Fixes
+
+* replace notification enums with checkboxes ([#13](https://github.com/derhally/github-notify/issues/13)) ([edd08ec](https://github.com/derhally/github-notify/commit/edd08ec26e47f776c0e481b2ea9d74a490bece17))
+
 ## [0.9.0](https://github.com/derhally/github-notify/compare/v0.8.0...v0.9.0) (2026-02-11)
 
 

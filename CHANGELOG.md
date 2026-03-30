@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.2](https://github.com/derhally/github-notify/compare/v0.10.1...v0.10.2) (2026-03-30)
+
+
+### Bug Fixes
+
+* resolve mic-detector binary path in development mode ([5f26384](https://github.com/derhally/github-notify/commit/5f26384d362f971957ddc9088579b8fb7d96598d))
+
 ## [0.10.1](https://github.com/derhally/github-notify/compare/v0.10.0...v0.10.1) (2026-03-30)
 
 

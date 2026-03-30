@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.5](https://github.com/derhally/github-notify/compare/v0.10.4...v0.10.5) (2026-03-30)
+
+
+### Bug Fixes
+
+* skip auto-launch registration in dev mode to prevent ghost electron window on reboot ([7d534a4](https://github.com/derhally/github-notify/commit/7d534a4dcf01700c70512bd9b08b6917b9f938e3))
+
 ## [0.10.4](https://github.com/derhally/github-notify/compare/v0.10.3...v0.10.4) (2026-03-30)
 
 

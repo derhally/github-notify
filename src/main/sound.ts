@@ -20,17 +20,27 @@ export function playCustomSound(filePath: string): void {
 
   void fs.promises.access(resolved, fs.constants.R_OK).then(() => {
     isPlaying = true;
-    const escaped = resolved.replace(/'/g, "''");
-    execFile(
-      'powershell',
-      ['-NoProfile', '-Command', `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`],
-      (error) => {
+
+    if (process.platform === 'darwin') {
+      execFile('afplay', [resolved], { timeout: 30000 }, (error) => {
         isPlaying = false;
         if (error) {
           log(`Failed to play custom sound: ${error.message}`);
         }
-      },
-    );
+      });
+    } else {
+      const escaped = resolved.replace(/'/g, "''");
+      execFile(
+        'powershell',
+        ['-NoProfile', '-Command', `(New-Object Media.SoundPlayer '${escaped}').PlaySync()`],
+        (error) => {
+          isPlaying = false;
+          if (error) {
+            log(`Failed to play custom sound: ${error.message}`);
+          }
+        },
+      );
+    }
   }).catch(() => {
     log(`Custom sound file not found: ${resolved}`);
   });

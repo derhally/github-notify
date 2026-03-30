@@ -1,9 +1,9 @@
 import type { ForgeConfig } from '@electron-forge/shared-types';
 import { MakerSquirrel } from '@electron-forge/maker-squirrel';
+import { MakerDMG } from '@electron-forge/maker-dmg';
 import { VitePlugin } from '@electron-forge/plugin-vite';
 import { FusesPlugin } from '@electron-forge/plugin-fuses';
 import { FuseV1Options, FuseVersion } from '@electron/fuses';
-import { PublisherGithub } from '@electron-forge/publisher-github';
 
 const config: ForgeConfig = {
   packagerConfig: {
@@ -11,20 +11,18 @@ const config: ForgeConfig = {
     name: 'GitHubNotify',
     executableName: 'github-notify',
     icon: 'assets/app-icon',
+    appBundleId: 'com.derhally.github-notify',
+    ...(process.platform === 'darwin' && {
+      extraResource: ['swift-mic-detector/.build/arm64-apple-macosx/release/mic-detector'],
+    }),
   },
   rebuildConfig: {},
   makers: [
     new MakerSquirrel({
       name: 'GitHubNotify',
     }),
-  ],
-  publishers: [
-    new PublisherGithub({
-      repository: {
-        owner: 'derhally',
-        name: 'github-notify',
-      },
-      prerelease: false,
+    new MakerDMG({
+      name: 'GitHubNotify',
     }),
   ],
   plugins: [

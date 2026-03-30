@@ -1,0 +1,33 @@
+# Install npm dependencies
+install:
+    npm ci
+
+# Build the Swift mic-detector binary (macOS only)
+build-swift:
+    cd swift-mic-detector && swift build -c release
+
+# Run the app locally in development mode
+dev: install
+    npm start
+
+# Run the app locally on macOS (builds Swift binary first)
+[macos]
+dev-mac: install build-swift
+    npm start
+
+# Build distributables for the current platform
+[macos]
+make: install build-swift
+    npm run make
+
+[windows]
+make: install
+    npm run make
+
+# Run TypeScript type checking
+check:
+    npx tsc --noEmit
+
+# Run linting
+lint:
+    npm run lint

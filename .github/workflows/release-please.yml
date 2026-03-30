@@ -22,10 +22,19 @@ jobs:
           config-file: release-please-config.json
           manifest-file: .release-please-manifest.json
 
-  build-and-release:
+  build:
     needs: release-please
     if: ${{ needs.release-please.outputs.release_created == 'true' }}
-    runs-on: windows-latest
+    strategy:
+      matrix:
+        include:
+          - os: windows-latest
+            artifact-name: windows-installer
+            artifact-glob: 'out/make/squirrel.windows/**/*.exe'
+          - os: macos-latest
+            artifact-name: macos-installer
+            artifact-glob: 'out/make/*.dmg'
+    runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -36,10 +45,41 @@ jobs:
           node-version: '20'
           cache: 'npm'
 
+      - name: Build Swift mic-detector (macOS only)
+        if: runner.os == 'macOS'
+        run: |
+          cd swift-mic-detector
+          swift build -c release
+
       - name: Install dependencies
         run: npm ci
 
-      - name: Publish to GitHub Releases
+      - name: Make distributables
+        run: npm run make
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: ${{ matrix.artifact-glob }}
+          if-no-files-found: error
+
+  publish:
+    needs: [release-please, build]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: Upload to GitHub Release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npm run publish
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
+        run: |
+          find artifacts -type f \( -name '*.exe' -o -name '*.dmg' \) | while read -r file; do
+            echo "Uploading: $file"
+            gh release upload "$TAG_NAME" "$file" --clobber
+          done

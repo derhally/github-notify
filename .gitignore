@@ -90,3 +90,6 @@ typings/
 
 # Electron-Forge
 out/
+
+# Swift Package Manager build artifacts
+swift-mic-detector/.build/

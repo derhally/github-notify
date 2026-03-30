@@ -84,7 +84,7 @@ app.innerHTML = `
 
   <div class="form-group">
     <div class="toggle-row">
-      <label>Start with Windows</label>
+      <label>Start at Login</label>
       <label class="toggle">
         <input type="checkbox" id="auto-start" />
         <span class="toggle-slider"></span>

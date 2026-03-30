@@ -46,7 +46,7 @@ function isValidSettings(value: unknown): value is AppSettings {
   );
 }
 
-export function registerIpcHandlers(onSettingsChanged: () => void): void {
+export function registerIpcHandlers(onSettingsChanged: () => void, onTokenSaved: () => void): void {
   ipcMain.handle('settings:get', () => {
     return getSettings();
   });
@@ -64,6 +64,7 @@ export function registerIpcHandlers(onSettingsChanged: () => void): void {
       throw new Error('Invalid token');
     }
     saveToken(token);
+    onTokenSaved();
   });
 
   ipcMain.handle('token:has', () => {

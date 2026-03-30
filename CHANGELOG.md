@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.1](https://github.com/derhally/github-notify/compare/v0.10.0...v0.10.1) (2026-03-30)
+
+
+### Bug Fixes
+
+* **mac:** add dark mode support, fix token save not enabling polling ([#18](https://github.com/derhally/github-notify/issues/18)) ([905af3b](https://github.com/derhally/github-notify/commit/905af3bfd1f4b5105eef603066573b4d63644a1b))
+
 ## [0.10.0](https://github.com/derhally/github-notify/compare/v0.9.2...v0.10.0) (2026-03-30)
 
 

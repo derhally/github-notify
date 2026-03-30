@@ -49,6 +49,10 @@ function getIconFilename(state: TrayState): string {
   return ICON_FILENAMES[state];
 }
 
+// States rendered as template images on macOS (system adapts to light/dark).
+// Non-template states keep their original colors for visual distinction.
+const MAC_TEMPLATE_STATES = new Set<TrayState>([TrayState.Normal, TrayState.Unconfigured]);
+
 function loadIcons(): Map<TrayState, NativeImage> {
   const cache = new Map<TrayState, NativeImage>();
   for (const state of Object.values(TrayState)) {
@@ -58,7 +62,7 @@ function loadIcons(): Map<TrayState, NativeImage> {
       cache.set(state, nativeImage.createEmpty());
     } else {
       if (process.platform === 'darwin') {
-        icon.setTemplateImage(true);
+        icon.setTemplateImage(MAC_TEMPLATE_STATES.has(state));
       }
       cache.set(state, icon);
     }

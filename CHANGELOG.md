@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.3](https://github.com/derhally/github-notify/compare/v0.10.2...v0.10.3) (2026-03-30)
+
+
+### Bug Fixes
+
+* token encryption fallback, mic-detector path, and diagnostics ([5140708](https://github.com/derhally/github-notify/commit/51407086cf49ab9fc6171fa5249e5b5e2fa88cce))
+
 ## [0.10.2](https://github.com/derhally/github-notify/compare/v0.10.1...v0.10.2) (2026-03-30)
 
 

@@ -1,5 +1,6 @@
 import { execFile, spawn, ChildProcess } from 'node:child_process';
 import path from 'node:path';
+import { app } from 'electron';
 import { log } from './logger';
 
 const POLL_INTERVAL_MS = 5_000;
@@ -54,7 +55,10 @@ export function checkMicNow(onStateChange: (active: boolean) => void): void {
 }
 
 function getMicDetectorPath(): string {
-  return path.join(process.resourcesPath, 'mic-detector');
+  if (app.isPackaged) {
+    return path.join(process.resourcesPath, 'mic-detector');
+  }
+  return path.join(app.getAppPath(), 'swift-mic-detector', '.build', 'arm64-apple-macosx', 'release', 'mic-detector');
 }
 
 function startMacMicDetection(onStateChange: (active: boolean) => void): void {

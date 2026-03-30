@@ -54,13 +54,18 @@ function updateSeenSet(allPRs: GitHubPR[], existingSeen: SeenEntry[]): SeenEntry
 }
 
 export async function pollNow(): Promise<void> {
-  if (isPolling || getIsPaused()) return;
+  if (isPolling) {
+    log('Poll skipped: already in progress');
+    return;
+  }
+  if (getIsPaused()) return;
 
   isPolling = true;
 
   try {
     const token = getToken();
     if (!token) {
+      log('No token available (encrypted token may have failed to decrypt)');
       setTrayState(TrayState.Unconfigured);
       setTrayTooltip('GitHub Notify - No token configured');
       return;

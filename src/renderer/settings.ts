@@ -221,7 +221,10 @@ saveBtn.addEventListener('click', async () => {
     setTimeout(() => {
       saveBtn.textContent = 'Save Settings';
     }, 1500);
-  } catch {
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    tokenStatus.textContent = `Save failed: ${message}`;
+    tokenStatus.className = 'status-message error';
     saveBtn.textContent = 'Save Failed';
     setTimeout(() => {
       saveBtn.textContent = 'Save Settings';

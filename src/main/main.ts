@@ -1,4 +1,4 @@
-import { app, BrowserWindow, powerMonitor, shell } from 'electron';
+import { app, BrowserWindow, powerMonitor, safeStorage, shell } from 'electron';
 import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { createTray, setTrayState, setTrayTooltip, getIsPaused, setSnoozeEndTime } from './tray';
@@ -166,6 +166,7 @@ app.whenReady().then(() => {
   }
 
   log('GitHub Notify starting');
+  log(`Platform: ${process.platform}, Packaged: ${app.isPackaged}, Encryption available: ${safeStorage.isEncryptionAvailable()}`);
 
   registerIpcHandlers(onSettingsChanged, () => {
     if (hasToken()) {

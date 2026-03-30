@@ -24,6 +24,11 @@ make: install build-swift
 make: install
     npm run make
 
+# Remove quarantine attribute from installed app (macOS only)
+[macos]
+unquarantine:
+    xattr -cr /Applications/GitHubNotify.app
+
 # Run TypeScript type checking
 check:
     npx tsc --noEmit

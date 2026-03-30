@@ -1,5 +1,7 @@
-import { safeStorage } from 'electron';
+import { safeStorage, app } from 'electron';
 import Store from 'electron-store';
+import crypto from 'node:crypto';
+import os from 'node:os';
 import { AppSettings, SeenEntry } from '../shared/types';
 
 interface StoreSchema {
@@ -72,17 +74,49 @@ function migrateSettings(): void {
 
 migrateSettings();
 
-export function saveToken(token: string): void {
-  if (!safeStorage.isEncryptionAvailable()) {
-    throw new Error('Encryption not available on this system');
+function deriveKey(): Buffer {
+  const material = `${os.hostname()}:${app.getPath('userData')}:github-notify`;
+  return crypto.createHash('sha256').update(material).digest();
+}
+
+function fallbackEncrypt(token: string): string {
+  const key = deriveKey();
+  const iv = crypto.randomBytes(16);
+  const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
+  const encrypted = Buffer.concat([cipher.update(token, 'utf-8'), cipher.final()]);
+  return iv.toString('base64') + ':' + encrypted.toString('base64');
+}
+
+function fallbackDecrypt(data: string): string | null {
+  try {
+    const [ivPart, encPart] = data.split(':');
+    const key = deriveKey();
+    const iv = Buffer.from(ivPart, 'base64');
+    const encrypted = Buffer.from(encPart, 'base64');
+    const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
+    return Buffer.concat([decipher.update(encrypted), decipher.final()]).toString('utf-8');
+  } catch {
+    return null;
   }
-  const encrypted = safeStorage.encryptString(token);
-  store.set('encryptedToken', encrypted.toString('base64'));
+}
+
+export function saveToken(token: string): void {
+  if (safeStorage.isEncryptionAvailable()) {
+    const encrypted = safeStorage.encryptString(token);
+    store.set('encryptedToken', encrypted.toString('base64'));
+  } else {
+    store.set('encryptedToken', 'fallback:' + fallbackEncrypt(token));
+  }
 }
 
 export function getToken(): string | null {
   const raw = store.get('encryptedToken');
   if (!raw) return null;
+
+  if (raw.startsWith('fallback:')) {
+    return fallbackDecrypt(raw.slice('fallback:'.length));
+  }
+
   if (!safeStorage.isEncryptionAvailable()) return null;
   try {
     const buffer = Buffer.from(raw, 'base64');

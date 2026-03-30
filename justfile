@@ -24,6 +24,15 @@ make: install build-swift
 make: install
     npm run make
 
+# Build, install to /Applications, and unquarantine (macOS only)
+[macos]
+deploy: make
+    @echo "Installing to /Applications..."
+    rm -rf /Applications/GitHubNotify.app
+    cp -R out/GitHubNotify-darwin-arm64/GitHubNotify.app /Applications/
+    xattr -cr /Applications/GitHubNotify.app
+    @echo "Installed and unquarantined."
+
 # Remove quarantine attribute from installed app (macOS only)
 [macos]
 unquarantine:

@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.4](https://github.com/derhally/github-notify/compare/v0.10.3...v0.10.4) (2026-03-30)
+
+
+### Bug Fixes
+
+* CI artifact rename failing on platform without matching files ([e05b922](https://github.com/derhally/github-notify/commit/e05b9223291fe28d2d3e6b9ba8b92d784cd0e722))
+
 ## [0.10.3](https://github.com/derhally/github-notify/compare/v0.10.2...v0.10.3) (2026-03-30)
 
 

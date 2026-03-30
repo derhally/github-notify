@@ -5,6 +5,7 @@ import { playCustomSound } from './sound';
 import { log } from './logger';
 
 const MAX_INDIVIDUAL_NOTIFICATIONS = 5;
+const activeNotifications = new Set<Notification>();
 
 function isValidGitHubUrl(url: string): boolean {
   try {
@@ -22,10 +23,17 @@ function showToast(pr: GitHubPR, silent: boolean): void {
     silent,
   });
 
+  activeNotifications.add(notification);
+
   notification.once('click', () => {
+    activeNotifications.delete(notification);
     if (isValidGitHubUrl(pr.url)) {
       shell.openExternal(pr.url);
     }
+  });
+
+  notification.once('close', () => {
+    activeNotifications.delete(notification);
   });
 
   notification.show();
@@ -38,8 +46,15 @@ function showSummaryToast(count: number, silent: boolean): void {
     silent,
   });
 
+  activeNotifications.add(notification);
+
   notification.once('click', () => {
+    activeNotifications.delete(notification);
     shell.openExternal('https://github.com/notifications');
+  });
+
+  notification.once('close', () => {
+    activeNotifications.delete(notification);
   });
 
   notification.show();

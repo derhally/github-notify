@@ -12,6 +12,12 @@ import { log } from './logger';
 import { isNotificationSuppressed } from './quiet-hours';
 import { TrayState, GitHubPR, SeenEntry, getPRKey, isOctokitError } from '../shared/types';
 
+let onPollComplete: (() => void) | null = null;
+
+export function setOnPollComplete(callback: () => void): void {
+  onPollComplete = callback;
+}
+
 let pollTimer: ReturnType<typeof setInterval> | null = null;
 let isPolling = false;
 let pollCount = 0;
@@ -84,7 +90,7 @@ export async function pollNow(): Promise<void> {
 
     if (!assignedResult.changed && !reviewResult.changed) {
       log('No changes detected (304 responses)');
-      setTrayState(TrayState.Normal);
+      onPollComplete?.();
       return;
     }
 
@@ -110,11 +116,7 @@ export async function pollNow(): Promise<void> {
       pruneSeenPRs();
     }
 
-    const suppressed = isNotificationSuppressed();
-    setTrayState(suppressed ? TrayState.Quiet : TrayState.Normal);
-    const now = new Date().toLocaleTimeString();
-    const statusPrefix = suppressed ? 'Quiet - ' : '';
-    setTrayTooltip(`GitHub Notify - ${statusPrefix}${filteredPRs.length} PRs tracked\nLast check: ${now}`);
+    onPollComplete?.();
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Unknown error';
     log(`Poll error: ${message}`);

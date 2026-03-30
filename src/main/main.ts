@@ -3,7 +3,7 @@ import path from 'node:path';
 import started from 'electron-squirrel-startup';
 import { createTray, setTrayState, setTrayTooltip, getIsPaused, setSnoozeEndTime } from './tray';
 import { registerIpcHandlers } from './ipc-handlers';
-import { startPolling, stopPolling, restartPolling, pollNow } from './poller';
+import { startPolling, stopPolling, restartPolling, pollNow, setOnPollComplete } from './poller';
 import { hasToken, getSettings, getSnoozeUntil, setSnoozeUntil, clearSnooze } from './store';
 import { setAutoLaunch } from './auto-launch';
 import { log, flushLogs, getLogFilePath } from './logger';
@@ -167,6 +167,8 @@ app.whenReady().then(() => {
 
   log('GitHub Notify starting');
   log(`Platform: ${process.platform}, Packaged: ${app.isPackaged}, Encryption available: ${safeStorage.isEncryptionAvailable()}`);
+
+  setOnPollComplete(updateTrayForSuppression);
 
   registerIpcHandlers(onSettingsChanged, () => {
     if (hasToken()) {

@@ -62,11 +62,9 @@ jobs:
         env:
           TAG_NAME: ${{ needs.release-please.outputs.tag_name }}
         run: |
-          for file in out/make/*.dmg; do
-            [ -f "$file" ] && mv "$file" "${file%.dmg}-${TAG_NAME}.dmg"
-          done
-          for file in out/make/squirrel.windows/x64/*.exe; do
-            [ -f "$file" ] && mv "$file" "${file%.exe}-${TAG_NAME}.exe"
+          find out/make -name '*.dmg' -o -name '*.exe' | while read -r file; do
+            ext="${file##*.}"
+            mv "$file" "${file%.*}-${TAG_NAME}.${ext}"
           done
 
       - name: Upload artifacts

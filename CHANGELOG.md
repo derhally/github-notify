@@ -1,5 +1,13 @@
 # Changelog
 
+## [0.10.6](https://github.com/derhally/github-notify/compare/v0.10.5...v0.10.6) (2026-03-30)
+
+
+### Bug Fixes
+
+* colored tray icons for quiet/error states, input-scoped mic detection ([17c813a](https://github.com/derhally/github-notify/commit/17c813a81e5176eae01d7c555d146c385e951703))
+* prevent poller from overwriting tray suppression state, retain notification references on macOS ([d56369b](https://github.com/derhally/github-notify/commit/d56369b3d734add658eb7323f09bfec81644143d))
+
 ## [0.10.5](https://github.com/derhally/github-notify/compare/v0.10.4...v0.10.5) (2026-03-30)
 
 

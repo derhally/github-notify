@@ -167,7 +167,20 @@ app.whenReady().then(() => {
 
   log('GitHub Notify starting');
 
-  registerIpcHandlers(onSettingsChanged);
+  registerIpcHandlers(onSettingsChanged, () => {
+    if (hasToken()) {
+      setTrayState(TrayState.Normal);
+      startPolling();
+      updateTrayForSuppression();
+
+      const settings = getSettings();
+      if (settings.micMuteEnabled) {
+        startMicDetection(onMicStateChange);
+      }
+
+      log('Token saved, polling started');
+    }
+  });
 
   createTray({
     onCheckNow: () => {

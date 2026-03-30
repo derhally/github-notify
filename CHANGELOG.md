@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.0](https://github.com/derhally/github-notify/compare/v0.9.2...v0.10.0) (2026-03-30)
+
+
+### Features
+
+* add macOS support ([#16](https://github.com/derhally/github-notify/issues/16)) ([d32bdfd](https://github.com/derhally/github-notify/commit/d32bdfdcf0492e91188b62f350931f32a7cad06f))
+
 ## [0.9.2](https://github.com/derhally/github-notify/compare/v0.9.1...v0.9.2) (2026-02-12)
 
 

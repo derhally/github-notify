@@ -161,6 +161,10 @@ app.on('second-instance', () => {
 });
 
 app.whenReady().then(() => {
+  if (process.platform === 'darwin' && app.dock) {
+    app.dock.hide();
+  }
+
   log('GitHub Notify starting');
 
   registerIpcHandlers(onSettingsChanged);

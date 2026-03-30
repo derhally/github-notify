@@ -27,11 +27,21 @@ const ICON_FILENAMES: Record<TrayState, string> = {
   [TrayState.Quiet]: 'tray-icon-quiet.png',
 };
 
+const MAC_ICON_FILENAMES: Record<TrayState, string> = {
+  [TrayState.Normal]: 'tray-icon-mac.png',
+  [TrayState.Error]: 'tray-icon-mac-error.png',
+  [TrayState.Unconfigured]: 'tray-icon-mac-unconfigured.png',
+  [TrayState.Quiet]: 'tray-icon-mac-quiet.png',
+};
+
 const LIGHT_THEME_OVERRIDES: Partial<Record<TrayState, string>> = {
   [TrayState.Normal]: 'tray-icon-dark.png',
 };
 
 function getIconFilename(state: TrayState): string {
+  if (process.platform === 'darwin') {
+    return MAC_ICON_FILENAMES[state];
+  }
   if (!nativeTheme.shouldUseDarkColors) {
     const override = LIGHT_THEME_OVERRIDES[state];
     if (override) return override;
@@ -44,7 +54,14 @@ function loadIcons(): Map<TrayState, NativeImage> {
   for (const state of Object.values(TrayState)) {
     const iconPath = path.join(__dirname, 'assets', getIconFilename(state));
     const icon = nativeImage.createFromPath(iconPath);
-    cache.set(state, icon.isEmpty() ? nativeImage.createEmpty() : icon);
+    if (icon.isEmpty()) {
+      cache.set(state, nativeImage.createEmpty());
+    } else {
+      if (process.platform === 'darwin') {
+        icon.setTemplateImage(true);
+      }
+      cache.set(state, icon);
+    }
   }
   return cache;
 }
@@ -150,11 +167,15 @@ export function createTray(cbs: TrayCallbacks): Tray {
   tray.setToolTip('GitHub Notify - Not configured');
   tray.setContextMenu(buildContextMenu());
 
-  tray.on('click', () => {
-    tray?.popUpContextMenu();
-  });
+  if (process.platform !== 'darwin') {
+    tray.on('click', () => {
+      tray?.popUpContextMenu();
+    });
+  }
 
-  nativeTheme.on('updated', onThemeUpdated);
+  if (process.platform !== 'darwin') {
+    nativeTheme.on('updated', onThemeUpdated);
+  }
 
   return tray;
 }

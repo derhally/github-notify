@@ -1,5 +1,12 @@
 # Changelog
 
+## [0.10.7](https://github.com/derhally/github-notify/compare/v0.10.6...v0.10.7) (2026-04-05)
+
+
+### Bug Fixes
+
+* declare LSUIElement for macOS notification delivery, add diagnostics ([5d2dafa](https://github.com/derhally/github-notify/commit/5d2dafa612955fe5c85892afc6bfa2ae6ab0fb1d))
+
 ## [0.10.6](https://github.com/derhally/github-notify/compare/v0.10.5...v0.10.6) (2026-03-30)
 
 

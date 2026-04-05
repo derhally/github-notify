@@ -39,6 +39,7 @@ export interface ElectronAPI {
   hasToken: () => Promise<boolean>;
   testConnection: (token?: string) => Promise<{ success: boolean; username?: string; message: string }>;
   openSoundFileDialog: () => Promise<string | null>;
+  openNotificationSettings: () => Promise<void>;
 }
 
 export function getPRKey(pr: GitHubPR): string {

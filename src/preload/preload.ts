@@ -8,6 +8,7 @@ const api: ElectronAPI = {
   hasToken: () => ipcRenderer.invoke('token:has'),
   testConnection: (token?: string) => ipcRenderer.invoke('token:test', token),
   openSoundFileDialog: () => ipcRenderer.invoke('dialog:open-sound-file'),
+  openNotificationSettings: () => ipcRenderer.invoke('shell:open-notification-settings'),
 };
 
 contextBridge.exposeInMainWorld('electronAPI', api);

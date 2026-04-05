@@ -40,6 +40,7 @@ app.innerHTML = `
         Text-to-Speech
       </label>
     </div>
+    <div class="hint">If toasts aren't appearing, check your <a href="#" id="open-notification-settings">system notification settings</a>.</div>
   </div>
 
   <div class="form-group" id="custom-sound-group" style="display: none;">
@@ -123,6 +124,8 @@ const autoStartCheckbox = document.getElementById('auto-start') as HTMLInputElem
 const filtersTextarea = document.getElementById('filters') as HTMLTextAreaElement;
 const saveBtn = document.getElementById('save') as HTMLButtonElement;
 
+const openNotificationSettingsLink = document.getElementById('open-notification-settings') as HTMLAnchorElement;
+
 const notificationCheckboxes = [soundEnabledCheckbox, toastEnabledCheckbox, ttsEnabledCheckbox];
 
 function enforceAtLeastOneChecked(changed: HTMLInputElement): void {
@@ -157,6 +160,11 @@ ttsEnabledCheckbox.addEventListener('change', () => {
 
 quietHoursEnabledCheckbox.addEventListener('change', () => {
   quietHoursTimesGroup.style.display = quietHoursEnabledCheckbox.checked ? '' : 'none';
+});
+
+openNotificationSettingsLink.addEventListener('click', (e) => {
+  e.preventDefault();
+  window.electronAPI.openNotificationSettings();
 });
 
 browseSoundBtn.addEventListener('click', async () => {

@@ -1,4 +1,4 @@
-import { ipcMain, dialog } from 'electron';
+import { ipcMain, dialog, shell } from 'electron';
 import path from 'node:path';
 import { getSettings, saveSettings, saveToken, hasToken, getToken } from './store';
 import { testConnection } from './github-api';
@@ -77,6 +77,14 @@ export function registerIpcHandlers(onSettingsChanged: () => void, onTokenSaved:
       return { success: false, message: 'No token set. Please enter a token first.' };
     }
     return testConnection(tokenToTest);
+  });
+
+  ipcMain.handle('shell:open-notification-settings', () => {
+    if (process.platform === 'darwin') {
+      shell.openExternal('x-apple.systempreferences:com.apple.Notifications-Settings');
+    } else if (process.platform === 'win32') {
+      shell.openExternal('ms-settings:notifications');
+    }
   });
 
   ipcMain.handle('dialog:open-sound-file', async () => {

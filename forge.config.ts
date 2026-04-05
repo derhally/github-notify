@@ -14,6 +14,9 @@ const config: ForgeConfig = {
     appBundleId: 'com.derhally.github-notify',
     ...(process.platform === 'darwin' && {
       extraResource: ['swift-mic-detector/.build/arm64-apple-macosx/release/mic-detector'],
+      extendInfo: {
+        LSUIElement: true,
+      },
     }),
   },
   rebuildConfig: {},

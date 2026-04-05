@@ -224,6 +224,16 @@ button:disabled {
   margin-top: 4px;
 }
 
+.hint a {
+  color: var(--focus);
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.hint a:hover {
+  text-decoration: underline;
+}
+
 .actions {
   display: flex;
   justify-content: flex-end;

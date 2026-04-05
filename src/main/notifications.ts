@@ -7,6 +7,10 @@ import { log } from './logger';
 const MAX_INDIVIDUAL_NOTIFICATIONS = 5;
 const activeNotifications = new Set<Notification>();
 
+export function checkNotificationSupport(): void {
+  log(`Notification.isSupported(): ${Notification.isSupported()}`);
+}
+
 function isValidGitHubUrl(url: string): boolean {
   try {
     const parsed = new URL(url);
@@ -17,6 +21,11 @@ function isValidGitHubUrl(url: string): boolean {
 }
 
 function showToast(pr: GitHubPR, silent: boolean): void {
+  if (!Notification.isSupported()) {
+    log(`Toast skipped (notifications not supported): ${pr.repoFullName}#${pr.number}`);
+    return;
+  }
+
   const notification = new Notification({
     title: `${pr.repoFullName} #${pr.number}`,
     body: `${pr.title}\nby @${pr.author}`,
@@ -24,6 +33,10 @@ function showToast(pr: GitHubPR, silent: boolean): void {
   });
 
   activeNotifications.add(notification);
+
+  notification.once('show', () => {
+    log(`Toast displayed: ${pr.repoFullName}#${pr.number}`);
+  });
 
   notification.once('click', () => {
     activeNotifications.delete(notification);
@@ -40,6 +53,11 @@ function showToast(pr: GitHubPR, silent: boolean): void {
 }
 
 function showSummaryToast(count: number, silent: boolean): void {
+  if (!Notification.isSupported()) {
+    log('Summary toast skipped (notifications not supported)');
+    return;
+  }
+
   const notification = new Notification({
     title: 'GitHub Notify',
     body: `${count} more new pull requests need your attention`,
@@ -47,6 +65,10 @@ function showSummaryToast(count: number, silent: boolean): void {
   });
 
   activeNotifications.add(notification);
+
+  notification.once('show', () => {
+    log(`Summary toast displayed: ${count} more PRs`);
+  });
 
   notification.once('click', () => {
     activeNotifications.delete(notification);
@@ -97,6 +119,8 @@ export function notifyNewPRs(
   customSoundPath: string,
 ): void {
   if (prs.length === 0) return;
+
+  log(`Notifying for ${prs.length} new PR(s) (toast=${toastEnabled}, sound=${soundEnabled}, tts=${ttsEnabled})`);
 
   const toNotifyIndividually = prs.slice(0, MAX_INDIVIDUAL_NOTIFICATIONS);
   const remaining = prs.length - MAX_INDIVIDUAL_NOTIFICATIONS;
